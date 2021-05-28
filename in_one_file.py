@@ -1,8 +1,9 @@
-from pretty_board import pretty_board
 from copy import deepcopy
 from collections import Counter
+from random import choice
 
 
+# ================================= board.py ===================================
 POSITIONS = {
     'tl': (0, 0), 'tm': (0, 1), 'tr': (0, 2),
     'ml': (1, 0), 'mm': (1, 1), 'mr': (1, 2),
@@ -138,7 +139,109 @@ class gameBoard:
 
 
 
-if __name__ == '__main__':
-    x = gameBoard()
-    print(x)
-    print(x['sr'])
+
+# ================================= pretty_board.py ============================
+class pretty_board:
+
+    def __init__(self, rows):
+        self.rows = rows
+        self.horizontal_line = ['─' * 3] * 3
+        self.prettyify()
+
+    def __str__(self):
+        return self.pretty_rows
+
+    def prettyify(self):
+        self.pretty_rows = self.top() + self.middle() + self.bottom()
+
+    def middle(self):
+        return f'{self.middle_border()}'.join(
+            self.pretty(row)
+            for row in self.rows
+        )
+
+    def pretty(self, row):
+        return self.with_borders(
+                column if column
+                else ' '
+                for column in row
+        )
+
+    def with_borders(self, pretty_row):
+        # add borders in between columns and at the ends
+        return '│ ' + ' │ '.join(pretty_row) + ' │'
+
+
+    def top(self):
+        middle = '┬'.join(self.horizontal_line)
+        return '┌' + middle + '┐' + '\n'
+
+    def middle_border(self):
+        middle = '┼'.join(self.horizontal_line)
+        return '\n' + '├' +  middle + '┤' + '\n'
+
+    def bottom(self):
+        middle = '┴'.join(self.horizontal_line)
+        return '\n' +  '└' + middle + '┘'
+
+
+
+
+# ================================= player.py ==================================
+class player:
+
+    def __init__(self, piece):
+        self.piece = piece
+
+    def __str__(self):
+        return f'piece: {self.piece}'
+
+    def move(self, board):
+        position = input(f"{self.piece}'s turn: ")
+        board[position] = self.piece
+
+        print(board)
+        print()
+
+
+
+# ================================= game.py ==================================
+def initial_state():
+    # board = gameBoard(test=True)
+    board = gameBoard()
+    x = player('x')
+    o = player('o')
+    print(board)
+    print()
+    return board, x, o
+
+
+def play_game(board, x, o, tie_game=False):
+    curr_player = choice((x, o))
+    retry_move = False
+    while not board.game_over() and not (tie_game := board.tie_game()):
+        try:
+            curr_player.move(board)
+            # only switch players if no exception raised during move
+            curr_player = o if curr_player.piece == 'x' else x
+
+        except PositionFull:
+            print('Position taken, please try again.')
+        except InvalidMove:
+            print('Invalid Move, please try again.')
+
+    last_player = o if curr_player.piece == 'x' else x
+    return tie_game, last_player.piece
+
+
+
+def decide_winner(tie_game, winner):
+    if tie_game:
+        print("It's a tie! Thanks for playing!")
+    else:
+        print(f'Congratulations to: {winner}')
+
+
+
+if __name__ == "__main__":
+    decide_winner(*play_game(*initial_state()))

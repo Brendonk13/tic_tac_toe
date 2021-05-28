@@ -42,4 +42,3 @@ def decide_winner(tie_game, winner):
 
 if __name__ == "__main__":
     decide_winner(*play_game(*initial_state()))
-
